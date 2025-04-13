@@ -72,6 +72,7 @@ def crop_image_mask(image_dir, mask_dir, mask_path, X_points, Y_points, split_he
                 #     continue
 
             mask_ = Image.fromarray(new_mask.astype(np.uint8))
+            mask_ = mask_.convert("L")
             mask_.save("{}/{}_{}.jpg".format(mask_dir, img_id, count), "JPEG")
             im = Image.fromarray(new_image.astype(np.uint8))
             im.save("{}/{}_{}.jpg".format(image_dir, img_id, count), "JPEG")
