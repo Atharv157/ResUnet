@@ -1,0 +1,12 @@
+torch>=2.0.0
+torchvision>=0.15.0  # Adjust based on your CUDA version if needed
+matplotlib>=3.0.0  # 2.1.0 is very outdated and incompatible with newer numpy
+tensorboardX
+numpy>=1.20.0  # Compatible with torch>=2.0.0
+librosa==0.7.2  # Works with numpy < 1.20, may need to upgrade or switch
+inflect==0.2.5
+scipy>=1.4.0  # 1.0.0 is too old for modern numpy
+Unidecode==1.0.22
+pillow>=7.0.0
+tqdm
+configargparse
