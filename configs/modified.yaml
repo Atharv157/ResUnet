@@ -1,4 +1,6 @@
 train: "./polyp-dataset"
+checkpoints: "/content/drive/MyDrive/polyp_segmentation/checkpoints"
+log: "/content/drive/MyDrive/polyp_segmentation/logs"
 # valid: "./data/testing"
 log: "logs"
 logging_step: 100
