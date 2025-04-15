@@ -72,6 +72,7 @@ def predict(hp, checkpoint_path, input_dir, output_dir):
 
             # Forward pass
             output = model(image)
+            print("Model output shape:", output.shape)
             pred_mask = (torch.sigmoid(output) > 0.5).float().cpu().numpy()[0, 0] * 255
             pred_mask = pred_mask.astype(np.uint8)
 
@@ -90,7 +91,7 @@ def predict(hp, checkpoint_path, input_dir, output_dir):
             ], axis=1)
             combined_path = os.path.join(output_dir, f"{basename}_combined.png")
             cv2.imwrite(combined_path, cv2.cvtColor(combined, cv2.COLOR_RGB2BGR))
-
+            break
 
 
 if __name__ == "__main__":
