@@ -34,7 +34,7 @@ class KvasirSegDataset(Dataset):
             image = augmented['image']
             mask = augmented['mask']
 
-        return {"sat_img": image, "map_img": mask}
+        return {"sat_img": image, "map_img": mask, "filename": img_name}
 
 
 def get_datasets(image_dir, mask_dir, val_size=0.2, seed=42, image_size=256):
@@ -72,3 +72,17 @@ def get_transforms(train=True, image_size=256):
                         std=(0.229, 0.224, 0.225)),
             ToTensorV2()
         ])
+
+
+def get_test_dataset(image_dir, mask_dir=None, image_size=256):
+    return KvasirSegDataset(
+        image_dir=image_dir,
+        mask_dir=mask_dir,
+        transform=A.Compose([
+            A.Resize(image_size, image_size),
+            A.Normalize(mean=(0.485, 0.456, 0.406),
+                        std=(0.229, 0.224, 0.225)),
+            ToTensorV2()
+        ])
+    )
+
