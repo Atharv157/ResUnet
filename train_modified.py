@@ -50,7 +50,8 @@ def main(hp, num_epochs, resume, name):
         image_dir=hp.train + "/input",
         mask_dir=hp.train + "/output",
         val_size=0.2,
-        seed=42
+        seed=42,
+        image_size=hp.IMAGE_SIZE
     )
 
     train_loader = DataLoader(train_dataset, batch_size=hp.batch_size, shuffle=True, num_workers=2)
