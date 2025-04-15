@@ -1,5 +1,5 @@
-train: "./data/training"
-valid: "./data/testing"
+train: "./polyp-dataset"
+# valid: "./data/testing"
 log: "logs"
 logging_step: 100
 validation_interval: 2000 # Save and valid have same interval
@@ -8,5 +8,5 @@ checkpoints: "checkpoints"
 batch_size: 16
 lr: 0.001
 RESNET_PLUS_PLUS: True
-IMAGE_SIZE: 1500
-CROP_SIZE: 224
+IMAGE_SIZE: 256
+# CROP_SIZE: 224
