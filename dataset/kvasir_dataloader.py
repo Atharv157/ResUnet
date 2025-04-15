@@ -27,7 +27,11 @@ class KvasirSegDataset(Dataset):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
 
+        print(f"Unique mask values before thresholding: {np.unique(mask)}")
+
         mask = (mask > 127).astype(np.float32)
+    
+        print(f"Unique mask values after thresholding: {np.unique(mask)}")
 
         if self.transform:
             augmented = self.transform(image=image, mask=mask)
