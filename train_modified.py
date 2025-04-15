@@ -83,9 +83,11 @@ def main(hp, num_epochs, resume, name):
                 writer.log_training(train_loss.avg, train_acc.avg, step)
                 loader.set_description(f"Training Loss: {train_loss.avg:.4f} Acc: {train_acc.avg:.4f}")
 
-            if step % hp.validation_interval == 0:
+            step += 1
+
+        if epoch % hp.save_every == 0:
                 valid_metrics = validation(val_loader, model, criterion, writer, step)
-                save_path = os.path.join(checkpoint_dir, f"{name}_checkpoint_{step:04d}.pt")
+                save_path = os.path.join(checkpoint_dir, f"{name}_checkpoint_epoch{epoch}.pt")
                 best_loss = min(valid_metrics["valid_loss"], best_loss)
                 torch.save({
                     "step": step,
@@ -96,8 +98,6 @@ def main(hp, num_epochs, resume, name):
                     "optimizer": optimizer.state_dict(),
                 }, save_path)
                 print(f"Saved checkpoint to: {save_path}")
-
-            step += 1
 
 
 def validation(valid_loader, model, criterion, logger, step):
