@@ -1,55 +1,103 @@
 import os
+import cv2
 import torch
-from tqdm import tqdm
+import argparse
 import numpy as np
-from torch.utils.data import DataLoader
-from torchvision.utils import save_image
+from tqdm import tqdm
+from torchvision import transforms
+
+from utils.hparams import HParam
 from core.res_unet import ResUnet
 from core.res_unet_plus import ResUnetPlusPlus
-from dataset.kvasir_dataloader import get_test_dataset
-from utils.hparams import HParam
 
-def save_mask(tensor, path):
-    # Assumes tensor is [1, H, W], values in [0, 1]
-    array = (tensor.squeeze().cpu().numpy() * 255).astype(np.uint8)
-    from PIL import Image
-    Image.fromarray(array).save(path)
+from albumentations.pytorch import ToTensorV2
+import albumentations as A
+from torch.utils.data import Dataset, DataLoader
 
-def predict(model_path, image_dir, save_dir, config_path):
-    os.makedirs(save_dir, exist_ok=True)
 
-    hp = HParam(config_path)
+class KvasirSegDatasetPredict(Dataset):
+    def __init__(self, image_dir, image_size=256):
+        self.image_dir = image_dir
+        self.images = sorted(os.listdir(image_dir))
+        self.transform = A.Compose([
+            A.Resize(image_size, image_size),
+            A.Normalize(mean=(0.485, 0.456, 0.406),
+                        std=(0.229, 0.224, 0.225)),
+            ToTensorV2()
+        ])
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, idx):
+        img_name = self.images[idx]
+        img_path = os.path.join(self.image_dir, img_name)
+
+        image = cv2.imread(img_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        transformed = self.transform(image=image)
+        image_tensor = transformed["image"]
+
+        return {
+            "image": image_tensor,
+            "original": image,
+            "filename": img_name
+        }
+
+
+def predict(hp, checkpoint_path, input_dir, output_dir):
+    os.makedirs(output_dir, exist_ok=True)
 
     # Load model
     model = ResUnetPlusPlus(3).cuda() if hp.RESNET_PLUS_PLUS else ResUnet(3, 64).cuda()
-    checkpoint = torch.load(model_path)
+    checkpoint = torch.load(checkpoint_path)
     model.load_state_dict(checkpoint["state_dict"])
     model.eval()
 
-    # Dataset
-    test_dataset = get_test_dataset(image_dir=image_dir, image_size=hp.IMAGE_SIZE)
-    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+    # Data
+    dataset = KvasirSegDatasetPredict(input_dir, image_size=hp.IMAGE_SIZE)
+    loader = DataLoader(dataset, batch_size=1, shuffle=False)
 
-    # Inference
+    print(f"Running prediction on {len(dataset)} images...")
+
     with torch.no_grad():
-        for batch in tqdm(test_loader, desc="Predicting"):
-            inputs = batch["sat_img"].cuda()
-            filename = os.path.splitext(batch["filename"][0])[0] + ".png"
+        for batch in tqdm(loader):
+            image = batch["image"].cuda()
+            original = batch["original"][0].numpy()
+            filename = batch["filename"][0]
+            basename = os.path.splitext(filename)[0]
 
-            outputs = model(inputs)
-            preds = torch.sigmoid(outputs)
-            binary_mask = (preds > 0.5).float()
+            # Forward pass
+            output = model(image)
+            pred_mask = (torch.sigmoid(output) > 0.5).float().cpu().numpy()[0, 0] * 255
+            pred_mask = pred_mask.astype(np.uint8)
 
-            save_path = os.path.join(save_dir, filename)
-            save_mask(binary_mask[0], save_path)
+            # Save original input
+            input_path = os.path.join(output_dir, f"{basename}_input.png")
+            cv2.imwrite(input_path, cv2.cvtColor(original, cv2.COLOR_RGB2BGR))
+
+            # Save predicted mask
+            mask_path = os.path.join(output_dir, f"{basename}_pred_mask.png")
+            cv2.imwrite(mask_path, pred_mask)
+
+            # Optional: side-by-side view
+            combined = np.concatenate([
+                original,
+                cv2.cvtColor(pred_mask, cv2.COLOR_GRAY2RGB)
+            ], axis=1)
+            combined_path = os.path.join(output_dir, f"{basename}_combined.png")
+            cv2.imwrite(combined_path, cv2.cvtColor(combined, cv2.COLOR_RGB2BGR))
+
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", required=True, help="Path to config YAML")
-    parser.add_argument("--checkpoint", required=True, help="Path to model checkpoint")
-    parser.add_argument("--input", required=True, help="Directory of input images")
-    parser.add_argument("--output", required=True, help="Where to save predicted masks")
-    args = parser.parse_args()
+    parser = argparse.ArgumentParser(description="Polyp Segmentation Inference")
+    parser.add_argument("-c", "--config", type=str, required=True, help="Path to config YAML")
+    parser.add_argument("--checkpoint", type=str, required=True, help="Path to trained checkpoint")
+    parser.add_argument("--input", type=str, required=True, help="Path to input image folder")
+    parser.add_argument("--output", type=str, required=True, help="Folder to save predictions")
 
-    predict(args.checkpoint, args.input, args.output, args.config)
+    args = parser.parse_args()
+    hp = HParam(args.config)
+
+    predict(hp, args.checkpoint, args.input, args.output)
