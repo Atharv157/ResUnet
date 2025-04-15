@@ -65,6 +65,8 @@ def predict(hp, checkpoint_path, input_dir, output_dir):
         for batch in tqdm(loader):
             image = batch["image"].cuda()
             original = batch["original"][0].numpy()
+            original_resized = cv2.resize(original, (hp.IMAGE_SIZE, hp.IMAGE_SIZE))
+
             filename = batch["filename"][0]
             basename = os.path.splitext(filename)[0]
 
@@ -73,21 +75,22 @@ def predict(hp, checkpoint_path, input_dir, output_dir):
             pred_mask = (torch.sigmoid(output) > 0.5).float().cpu().numpy()[0, 0] * 255
             pred_mask = pred_mask.astype(np.uint8)
 
-            # Save original input
+            # Save original input (resized to 256x256)
             input_path = os.path.join(output_dir, f"{basename}_input.png")
-            cv2.imwrite(input_path, cv2.cvtColor(original, cv2.COLOR_RGB2BGR))
-
-            # Save predicted mask
+            cv2.imwrite(input_path, cv2.cvtColor(original_resized, cv2.COLOR_RGB2BGR))
+            
+            # Save predicted mask (already 256x256)
             mask_path = os.path.join(output_dir, f"{basename}_pred_mask.png")
             cv2.imwrite(mask_path, pred_mask)
-
-            # Optional: side-by-side view
+            
+            # Save side-by-side view (both 256x256)
             combined = np.concatenate([
-                original,
+                original_resized,
                 cv2.cvtColor(pred_mask, cv2.COLOR_GRAY2RGB)
             ], axis=1)
             combined_path = os.path.join(output_dir, f"{basename}_combined.png")
             cv2.imwrite(combined_path, cv2.cvtColor(combined, cv2.COLOR_RGB2BGR))
+
 
 
 if __name__ == "__main__":
