@@ -2,10 +2,10 @@ train: "./polyp-dataset"
 checkpoints: "/content/drive/MyDrive/polyp_segmentation/checkpoints"
 log: "/content/drive/MyDrive/polyp_segmentation/logs"
 # valid: "./data/testing"
-log: "logs"
+# log: "logs"
 logging_step: 100
 validation_interval: 2000 # Save and valid have same interval
-checkpoints: "checkpoints"
+# checkpoints: "checkpoints"
 
 batch_size: 16
 lr: 0.001
