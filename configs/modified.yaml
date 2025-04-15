@@ -4,7 +4,8 @@ log: "/content/drive/MyDrive/polyp_segmentation/logs"
 # valid: "./data/testing"
 # log: "logs"
 logging_step: 100
-validation_interval: 2000 # Save and valid have same interval
+save_every: 10
+# validation_interval: 2000 # Save and valid have same interval
 # checkpoints: "checkpoints"
 
 batch_size: 16
