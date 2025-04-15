@@ -66,7 +66,7 @@ def main(hp, num_epochs, resume, name):
         train_loss = metrics.MetricTracker()
 
         loader = tqdm(train_loader, desc="training")
-        for idx, (inputs, labels) in enumerate(loader):
+        for idx, data in enumerate(loader):
             inputs = data["sat_img"].cuda()
             labels = data["map_img"].cuda()
 
@@ -106,7 +106,7 @@ def validation(valid_loader, model, criterion, logger, step):
 
     model.eval()
     with torch.no_grad():
-        for idx, (inputs, labels) in enumerate(tqdm(valid_loader, desc="validation")):
+        for idx, data in enumerate(tqdm(valid_loader, desc="validation")):
             inputs = data["sat_img"].cuda()
             labels = data["map_img"].cuda()
             outputs = model(inputs)
