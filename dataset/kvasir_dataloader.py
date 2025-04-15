@@ -50,7 +50,7 @@ def get_datasets(image_dir, mask_dir, val_size=0.2, seed=42):
     return train_dataset, val_dataset
 
 
-def get_transforms(train=True):
+def get_transforms(train=True, image_size=256):
     if train:
         return A.Compose([
             A.Resize(256, 256),
