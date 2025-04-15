@@ -13,7 +13,7 @@ from core.res_unet_plus import ResUnetPlusPlus
 from utils.logger import MyWriter
 
 # Import your custom dataset
-from dataset.kvasir_dataset import get_datasets  # adjust this if your file is named differently
+from dataset.kvasir_dataloader import get_datasets  # adjust this if your file is named differently
 
 def main(hp, num_epochs, resume, name):
     checkpoint_dir = os.path.join(hp.checkpoints, name)
