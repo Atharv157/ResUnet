@@ -73,7 +73,17 @@ def predict(hp, checkpoint_path, input_dir, output_dir):
             # Forward pass
             output = model(image)
             print("Model output shape:", output.shape)
-            pred_mask = (torch.sigmoid(output) > 0.5).float().cpu().numpy()[0, 0] * 255
+
+            # Apply sigmoid and print statistics
+            sigmoid_output = torch.sigmoid(output).cpu().numpy()[0, 0]
+            print(f"Sigmoid output stats - min: {sigmoid_output.min()}, max: {sigmoid_output.max()}, mean: {sigmoid_output.mean()}")
+
+            # Save raw probability map for inspection
+            prob_map = (sigmoid_output * 255).astype(np.uint8)
+            cv2.imwrite(os.path.join(output_dir, f"{basename}_prob_map.png"), prob_map)
+
+            # Threshold to create binary mask
+            pred_mask = (sigmoid_output > 0.5).astype(np.uint8) * 255
             pred_mask = pred_mask.astype(np.uint8)
 
             # Save original input (resized to 256x256)
@@ -91,7 +101,8 @@ def predict(hp, checkpoint_path, input_dir, output_dir):
             ], axis=1)
             combined_path = os.path.join(output_dir, f"{basename}_combined.png")
             cv2.imwrite(combined_path, cv2.cvtColor(combined, cv2.COLOR_RGB2BGR))
-            break
+
+            break  # Only process one image for testing, remove this for batch processing
 
 
 if __name__ == "__main__":
