@@ -67,7 +67,8 @@ def main(hp, num_epochs, resume, name):
 
         loader = tqdm(train_loader, desc="training")
         for idx, (inputs, labels) in enumerate(loader):
-            inputs, labels = inputs.cuda(), labels.cuda()
+            inputs = data["sat_img"].cuda()
+            labels = data["map_img"].cuda()
 
             optimizer.zero_grad()
             outputs = model(inputs)
@@ -106,7 +107,8 @@ def validation(valid_loader, model, criterion, logger, step):
     model.eval()
     with torch.no_grad():
         for idx, (inputs, labels) in enumerate(tqdm(valid_loader, desc="validation")):
-            inputs, labels = inputs.cuda(), labels.cuda()
+            inputs = data["sat_img"].cuda()
+            labels = data["map_img"].cuda()
             outputs = model(inputs)
             loss = criterion(outputs, labels)
 
