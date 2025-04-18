@@ -13,7 +13,8 @@ from core.res_unet_plus import ResUnetPlusPlus
 from utils.logger import MyWriter
 
 # Import your custom dataset
-from dataset.kvasir_dataloader import get_datasets  # adjust this if your file is named differently
+# from dataset.kvasir_dataloader import get_datasets  # adjust this if your file is named differently
+from dataset.augmented_dataloader import get_on_disk_datasets 
 
 def main(hp, num_epochs, resume, name):
     checkpoint_dir = os.path.join(hp.checkpoints, name)
@@ -46,16 +47,27 @@ def main(hp, num_epochs, resume, name):
         print(f"=> no checkpoint found at '{resume}'")
 
     # dataset and dataloaders
-    train_dataset, val_dataset = get_datasets(
-        image_dir=hp.train + "/input",
-        mask_dir=hp.train + "/output",
-        val_size=0.2,
-        seed=42,
-        image_size=hp.IMAGE_SIZE
+    # train_dataset, val_dataset = get_datasets(
+    #     image_dir=hp.train + "/input",
+    #     mask_dir=hp.train + "/output",
+    #     val_size=0.2,
+    #     seed=42,
+    #     image_size=hp.IMAGE_SIZE
+    # )
+
+    # train_loader = DataLoader(train_dataset, batch_size=hp.batch_size, shuffle=True, num_workers=2)
+    # val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=2)
+
+
+    train_dataset, val_dataset, test_dataset = get_on_disk_datasets(
+        root_dir=hp.train,
+        to_tensor=True,           # same behavior as before
+        exts=('jpg','png')        # adjust if you used others
     )
 
     train_loader = DataLoader(train_dataset, batch_size=hp.batch_size, shuffle=True, num_workers=2)
-    val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=2)
+    val_loader   = DataLoader(val_dataset,   batch_size=1,             shuffle=False, num_workers=2)
+
 
     step = 0
     for epoch in range(start_epoch, num_epochs):
